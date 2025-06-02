@@ -1,7 +1,8 @@
 import os
 import re
-from utils import extract_text_from_pdf
+from modules.utils import extract_text_from_pdf
 import requests
+import uuid
 
 class CV_Ingestor:
     """
@@ -97,8 +98,9 @@ class CV_GDrive_Ingestor(CV_Ingestor):
             raise ValueError("Invalid Google Drive URL format.")
 
         file_id = match.group(1)
+        print(f"Extracted file ID: {file_id}")
         download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
-        file_path = os.path.join(tmp_dir, f"{file_id}.pdf")
+        file_path = os.path.join(tmp_dir, f"{uuid.uuid4()}_{file_id}.pdf")
         
         # Download the file from Google Drive
         response = requests.get(download_url)
@@ -106,7 +108,7 @@ class CV_GDrive_Ingestor(CV_Ingestor):
         if response.status_code == 200:
             with open(file_path, 'wb') as f:
                 f.write(response.content)
-            return file_path
+            return file_path, download_url
         else:
             raise Exception(f"Failed to download file with ID {file_id}. Status code: {response.status_code}")
 
@@ -123,14 +125,15 @@ class CV_GDrive_Ingestor(CV_Ingestor):
         
         # Check if the tmp_dir exists, if not create it
         # Download the file from Google Drive
-        file_path = self.download_file(url, tmp_dir)
+        file_path, gdrive_url = self.download_file(url, tmp_dir)
         if not file_path:
             raise Exception("File download failed.")
         raw_text = extract_text_from_pdf(file_path)
         
         return {
             'file_path': file_path,
-            'raw_text': raw_text
+            'raw_text': raw_text,
+            'gdrive_url': gdrive_url
         }
     
     def ingest_folder(self, gdrive_folder_url, tmp_dir='tmp'):
@@ -159,12 +162,16 @@ class CV_GDrive_Ingestor(CV_Ingestor):
                     raw_texts.append(raw_text)
                 except Exception as e:
                     print(f"Error processing file {filename}: {str(e)}")
-        # Clean up temporary directory
-        # if os.path.exists(tmp_dir):
-        #     for file in os.listdir(tmp_dir):
-        #         os.remove(os.path.join(tmp_dir, file))
+        # Clean up temporary directory if not pdf files 
+        for filename in os.listdir(tmp_dir):
+            if not filename.endswith('.pdf'):
+                os.remove(os.path.join(tmp_dir, filename))
 
-        return raw_texts
+        return {
+            'gdrive_folder_url': gdrive_folder_url,
+            'raw_texts': raw_texts,
+            'file_paths': [filename for filename in os.listdir(tmp_dir) if filename.endswith('.pdf')]
+        }
 if __name__ == "__main__":
     # Example usage
     # local_ingestor = CV_Local_Ingestor()

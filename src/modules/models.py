@@ -52,8 +52,8 @@ class Education(Base):
     institution: Mapped[str] = mapped_column(Text, nullable=False)
     degree: Mapped[Optional[str]] = mapped_column(VARCHAR(100))
     field: Mapped[Optional[str]] = mapped_column(VARCHAR(255))
-    start_date: Mapped[Optional[date]]
-    end_date: Mapped[Optional[date]]
+    start_date: Mapped[Optional[str]]
+    end_date: Mapped[Optional[str]]
 
     person: Mapped["Person"] = relationship(back_populates="educations")
 

@@ -13,7 +13,8 @@ class CVInformationExtractor:
     def __init__(self, google_api_key: str):
         self.llm = ChatGoogleGenerativeAI(
             google_api_key=google_api_key,
-            model="gemini-2.0-flash-001"  # Update if using Gemini 1.5 or custom variant
+            model="gemini-2.0-flash-lite",
+            temperature=0  # Update if using Gemini 1.5 or custom variant
         )
         
     def extract(self, cv_text: str) -> Dict[str, Any]:
@@ -47,10 +48,7 @@ class CVInformationExtractor:
             )
         chain = prompt | self.llm | JsonOutputParser()
         response = chain.invoke({"cv_text": cv_text})
-        try:
-            return response
-        except json.JSONDecodeError:
-            return {"error": "Failed to parse JSON", "raw_response": response}
+        return response
     
     def transform(self, cv_text: str) -> Dict[str, Any]:
         extracted_json = self.extract(cv_text)
@@ -86,6 +84,25 @@ class CVInformationExtractor:
         })
 
         return response
+    
+    def extract_and_transform(self, cv_text: str) -> Dict[str, Any]:
+        """
+        Extracts and transforms CV information in one step.
+        
+        Parameters:
+            cv_text (str): The raw text of the CV.
+        
+        Returns:
+            dict: Transformed structured data from the CV.
+        """
+        print(f"Extracting data from CV...")
+        extracted_data = self.extract(cv_text)
+        print(f"Extract data sucessfully. Now transforming it...")
+        # import time
+        # time.sleep(15)
+        transformed_data = self.transform(extracted_data)
+        return transformed_data
+    
 
 if __name__ == "__main__":
     # Example usage
@@ -99,7 +116,6 @@ if __name__ == "__main__":
     response = ingestor.ingest("data/resume.pdf")
     raw_text = response['raw_text']
     # print(f"Raw text extracted from CV: {raw_text[:500]}...")  # Print first 500 chars for brevity
-    response = extractor.extract(raw_text)
-    print(f"extracted raw text")
-    transform_response = extractor.transform(response)
-    print(f"Extracted information: {json.dumps(transform_response, indent=2)}")
+    response = extractor.extract_and_transform(raw_text)
+    print(f"Transformed data: {response}")
+    print(f"Type of response: {type(response)}")

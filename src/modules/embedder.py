@@ -13,7 +13,8 @@ class Embedder:
     """
     Uses Gemini via LangChain to embed CV text for similarity search.
     """
-    def __init__(self, google_api_key: str, qdrant_host: str = "localhost", qdrant_port: int = 6333):
+    def __init__(self, google_api_key: 
+                 str, qdrant_host: str = "localhost", qdrant_port: int = 6333):
         self.client = genai.Client(api_key=google_api_key)
         self.model = "gemini-embedding-exp-03-07"
         self.qdrant_client = QdrantClient(host=qdrant_host, port=qdrant_port)
@@ -90,13 +91,12 @@ class Embedder:
         full_description_embedding = self.embed(full_description)
 
         point = PointStruct(
-            id=str(uuid.uuid4()),  # Generate a unique ID for the point
+            id=int(resume_id),  # Generate a unique ID for the point
             vector=full_description_embedding,
             payload={
                 "skills": skills,
                 "years_of_experience": yoe,
-                "person_id": person_id,
-                "resume_id": resume_id
+                "person_id": person_id
             }
         )
         self.qdrant_client.upsert(
@@ -122,7 +122,7 @@ class Embedder:
             limit=limit
         )
         
-        return results
+        return results.points
         
     def search_with_filter(self, query: str, filter: dict, limit: int = 3):
         """
@@ -138,8 +138,8 @@ class Embedder:
         """
         skills = filter.get("skills", [])
         yoe = filter.get("yoe", 0)
-        if not skills:
-            raise ValueError("Filter must contain 'skills' key with a list of skills.")
+        if skills is None and yoe is None:
+            return self.search(query, limit)
         query_embedding = self.embed(query)
         results = self.qdrant_client.query_points(
             collection_name=self.collection_name,
@@ -161,7 +161,7 @@ class Embedder:
         )
 
 
-        return results
+        return results.points
 
 if __name__ == "__main__":
     # Example usage
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     # }
     # embedder.embed_cv("77889", "99001", payload)
 
-    # #payload for SE
+    #payload for SE
     # payload = {
     #     "skills": ["java", "software engineering"],
     #     "years_of_experience": 7,
@@ -212,13 +212,13 @@ if __name__ == "__main__":
     # embedder.embed_cv("22334", "55667", payload)
 
     # Search for similar CVs
-    query = "Looking for a Python developer with data analysis skills"
+    query = "Looking for an software engineer with experience in Python image processing"
     filter = {
-        "skills": ["data engineering"],
-        "yoe": 3
     }
-    results = embedder.search(query, limit=3)
+    results = embedder.search_with_filter(query, limit=5, filter=filter)
     print("Search Results:")
+    # print(results)
     for result in results:
-        print(f"{result}\n")
+        print(f"{result}")
+        print("---------------------")
 
