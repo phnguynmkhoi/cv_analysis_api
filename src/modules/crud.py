@@ -37,6 +37,14 @@ class CRUD:
         self.db.refresh(person)
         return person, educations, resume_files
     
+    def get_person_by_email(self, email: str) -> Person:
+        """
+        Retrieve a person by their email address.
+        """
+        return self.db.execute(
+            select(Person).where(Person.email == email.lower())
+        ).scalar_one_or_none()
+        
     def add_education(self, person_id: int, education: Education) -> Education:
         """
         Add an education record for a person.
@@ -78,6 +86,12 @@ class CRUD:
         return self.db.execute(
             select(Education).where(Education.person_id == person_id)
         ).scalars().all()
+    
+    def get_resume_file(self, resume_file_id: int) -> ResumeFile:
+        """
+        Retrieve a resume file by its ID.
+        """
+        return self.db.get(ResumeFile, resume_file_id)
     
     def get_resume_files_by_person_id(self, person_id: int) -> list[ResumeFile]:
         """

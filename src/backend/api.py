@@ -289,7 +289,7 @@ async def update_cv(
     if resume_file.status != "SUCCESS":
         raise HTTPException(status_code=400, detail="Resume file is not in a valid state for update")
     # Update resume file details
-    crud_module.update_resume_file(
+    crud_module.update_resume_file_by_id(
         resume_file_id=resume_file.id,
         updates={
             "filename": file.filename,
@@ -418,33 +418,6 @@ async def delete_person(
     return JSONResponse(
         content={
             "message": "Person deleted successfully"
-        },
-        status_code=200
-    )
-
-@router.delete("/delete-education/{education_id}")
-async def delete_education(
-    education_id: int,
-    crud_module: CRUD = Depends(get_crud_module),
-):
-    """
-    Delete an education record by its ID.
-    
-    Parameters:
-        education_id (int): The ID of the education record to delete.
-    
-    Returns:
-        str: A success message.
-    """
-    education = crud_module.get_education(education_id)
-    if not education:
-        raise HTTPException(status_code=404, detail="Education not found")
-    
-    crud_module.delete_education(education_id)
-    
-    return JSONResponse(
-        content={
-            "message": "Education deleted successfully"
         },
         status_code=200
     )
