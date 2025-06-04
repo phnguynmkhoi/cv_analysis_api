@@ -110,8 +110,13 @@ class CRUD:
             raise ValueError("Person not found")
         
         for key, value in updates.items():
-            setattr(person, key, value)
+            if key != "summary":  # summary is a special case, handled separately
+                setattr(person, key, value)
         
+        if "summary" in updates:
+            person.summary = person.summary or ""
+            person.summary += "\n" + updates["summary"]
+
         self.db.commit()
         self.db.refresh(person)
         return person

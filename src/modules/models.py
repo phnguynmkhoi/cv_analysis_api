@@ -40,6 +40,17 @@ class Person(Base):
     # optional helper
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Person(id={self.id}, email={self.email!r})>"
+    
+    def to_dict(self) -> dict:
+        """Convert the Person instance to a dictionary."""
+        return {
+            "id": self.id,
+            "full_name": self.full_name,
+            "email": self.email,
+            "phone": self.phone,
+            "summary": self.summary,
+            "educations": [education.to_dict() for education in self.educations]
+        }
 
 
 class Education(Base):
@@ -59,6 +70,17 @@ class Education(Base):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Education(id={self.id}, institution={self.institution!r})>"
+    
+    def to_dict(self) -> dict:
+        """Convert the Education instance to a dictionary."""
+        return {
+            "id": self.id,
+            "institution": self.institution,
+            "degree": self.degree,
+            "field": self.field,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+        }
 
 
 class ResumeFile(Base):
@@ -88,3 +110,14 @@ class ResumeFile(Base):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<ResumeFile(id={self.id}, status={self.status})>"
+    
+    def to_dict(self) -> dict:
+        """Convert the ResumeFile instance to a dictionary."""
+        return {
+            "id": self.id,
+            "filename": self.filename,
+            "sha256": self.sha256,
+            "storage_url": self.storage_url,
+            "status": self.status,
+            "person_id": self.person_id,
+        }

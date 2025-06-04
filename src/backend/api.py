@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 import uuid
 
 from modules.crud import CRUD
@@ -379,18 +379,18 @@ async def search_cv(
     
     person_ids = {point.payload["person_id"] for point in results}
     resume_ids = {point.id for point in results}
+    print(person_ids, resume_ids)
+    print(crud_module.get_person(1))
     response = [
-        {"person_id": point.payload["person_id"], 
-         "resume_id": point.id, 
-         "person": crud_module.get_person(point.payload["person_id"]), 
-         "resume_file": crud_module.get_resume_file(point.id)} 
+        {"person": crud_module.get_person(point.payload["person_id"]).to_dict(), 
+         "resume_file": crud_module.get_resume_file(point.id).to_dict()} 
         for point in results if point.payload["person_id"] in person_ids and point.id in resume_ids
     ]
     
     return JSONResponse(
         content={
             "message": "CVs found",
-            "results": response,
+            "results": response
         },
         status_code=200
     )
